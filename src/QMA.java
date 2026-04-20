@@ -1,16 +1,18 @@
 enum LengthUnit {
 
-    FEET(1.0),
-    INCH(1.0 / 12.0);
+    INCH(1.0),
+    FEET(12.0),
+    YARD(36.0),
+    CENTIMETER(0.393701);
 
-    private final double conversionFactorToFeet;
+    private final double toInchFactor;
 
-    LengthUnit(double conversionFactorToFeet) {
-        this.conversionFactorToFeet = conversionFactorToFeet;
+    LengthUnit(double toInchFactor) {
+        this.toInchFactor = toInchFactor;
     }
 
-    public double convertToFeet(double value) {
-        return value * conversionFactorToFeet;
+    public double convertToInch(double value) {
+        return value * toInchFactor;
     }
 }
 
@@ -24,8 +26,8 @@ class QuantityLength {
         this.unit = unit;
     }
 
-    public double getValueInFeet() {
-        return unit.convertToFeet(value);
+    public double getValueInInch() {
+        return unit.convertToInch(value);
     }
 
     @Override
@@ -37,12 +39,12 @@ class QuantityLength {
 
         QuantityLength other = (QuantityLength) obj;
 
-        return Double.compare(this.getValueInFeet(), other.getValueInFeet()) == 0;
+        return Double.compare(this.getValueInInch(), other.getValueInInch()) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Double.hashCode(getValueInFeet());
+        return Double.hashCode(getValueInInch());
     }
 
     public double getValue() {
@@ -56,52 +58,40 @@ class QuantityLength {
 
 class QuantityMeasurementTests {
 
-    static void testFeetToFeet_SameValue() {
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-        QuantityLength q2 = new QuantityLength(1.0, LengthUnit.FEET);
+    static void testYardToFeet() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARD);
+        QuantityLength q2 = new QuantityLength(3.0, LengthUnit.FEET);
 
-        System.out.println("Feet vs Feet (Same) -> " +
-                q1.getValue() + " ft vs " +
-                q2.getValue() + " ft => " +
-                q1.equals(q2));
+        System.out.println("1 Yard vs 3 Feet => " + q1.equals(q2));
     }
 
-    static void testFeetToFeet_DifferentValue() {
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-        QuantityLength q2 = new QuantityLength(2.0, LengthUnit.FEET);
+    static void testYardToInch() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARD);
+        QuantityLength q2 = new QuantityLength(36.0, LengthUnit.INCH);
 
-        System.out.println("Feet vs Feet (Different) -> " +
-                q1.getValue() + " ft vs " +
-                q2.getValue() + " ft => " +
-                q1.equals(q2));
+        System.out.println("1 Yard vs 36 Inch => " + q1.equals(q2));
     }
 
-    static void testInchToInch_SameValue() {
-        QuantityLength q1 = new QuantityLength(12.0, LengthUnit.INCH);
-        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+    static void testCentimeterToInch() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.CENTIMETER);
+        QuantityLength q2 = new QuantityLength(0.393701, LengthUnit.INCH);
 
-        System.out.println("Inch vs Inch (Same) -> " +
-                q1.getValue() + " in vs " +
-                q2.getValue() + " in => " +
-                q1.equals(q2));
+        System.out.println("1 cm vs 0.393701 inch => " + q1.equals(q2));
     }
 
-    static void testInchToFeet_Equivalent() {
-        QuantityLength q1 = new QuantityLength(12.0, LengthUnit.INCH);
-        QuantityLength q2 = new QuantityLength(1.0, LengthUnit.FEET);
+    static void testComplexCase() {
+        QuantityLength q1 = new QuantityLength(2.0, LengthUnit.YARD);
+        QuantityLength q2 = new QuantityLength(72.0, LengthUnit.INCH);
 
-        System.out.println("12 inch vs 1 feet -> " +
-                q1.getValue() + " in vs " +
-                q2.getValue() + " ft => " +
-                q1.equals(q2));
+        System.out.println("2 Yard vs 72 Inch => " + q1.equals(q2));
     }
 
     static void runAllTests() {
 
-        testFeetToFeet_SameValue();
-        testFeetToFeet_DifferentValue();
-        testInchToInch_SameValue();
-        testInchToFeet_Equivalent();
+        testYardToFeet();
+        testYardToInch();
+        testCentimeterToInch();
+        testComplexCase();
     }
 }
 

@@ -1,43 +1,31 @@
-class Feet {
+enum LengthUnit {
 
-    private final double value;
+    FEET(1.0),
+    INCH(1.0 / 12.0);
 
-    public Feet(double value) {
-        this.value = value;
+    private final double conversionFactorToFeet;
+
+    LengthUnit(double conversionFactorToFeet) {
+        this.conversionFactorToFeet = conversionFactorToFeet;
     }
 
-    public double getValue() {
-        return value;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-
-        if (this == obj) return true;
-
-        if (obj == null || getClass() != obj.getClass()) return false;
-
-        Feet other = (Feet) obj;
-
-        return Double.compare(this.value, other.value) == 0;
-    }
-
-    @Override
-    public int hashCode() {
-        return Double.hashCode(value);
+    public double convertToFeet(double value) {
+        return value * conversionFactorToFeet;
     }
 }
 
-class Inch {
+class QuantityLength {
 
     private final double value;
+    private final LengthUnit unit;
 
-    public Inch(double value) {
+    public QuantityLength(double value, LengthUnit unit) {
         this.value = value;
+        this.unit = unit;
     }
 
-    public double getValue() {
-        return value;
+    public double getValueInFeet() {
+        return unit.convertToFeet(value);
     }
 
     @Override
@@ -47,85 +35,79 @@ class Inch {
 
         if (obj == null || getClass() != obj.getClass()) return false;
 
-        Inch other = (Inch) obj;
+        QuantityLength other = (QuantityLength) obj;
 
-        return Double.compare(this.value, other.value) == 0;
+        return Double.compare(this.getValueInFeet(), other.getValueInFeet()) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Double.hashCode(value);
+        return Double.hashCode(getValueInFeet());
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public LengthUnit getUnit() {
+        return unit;
     }
 }
 
 class QuantityMeasurementTests {
 
-    // FEET TESTS
-    static void testFeet_SameValue() {
-        Feet f1 = new Feet(1.0);
-        Feet f2 = new Feet(1.0);
+    static void testFeetToFeet_SameValue() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(1.0, LengthUnit.FEET);
 
-        System.out.println(
-                "Feet Same Value -> " +
-                        f1.getValue() + " ft vs " +
-                        f2.getValue() + " ft => " +
-                        f1.equals(f2)
-        );
+        System.out.println("Feet vs Feet (Same) -> " +
+                q1.getValue() + " ft vs " +
+                q2.getValue() + " ft => " +
+                q1.equals(q2));
     }
 
-    static void testFeet_DifferentValue() {
-        Feet f1 = new Feet(1.0);
-        Feet f2 = new Feet(2.0);
+    static void testFeetToFeet_DifferentValue() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(2.0, LengthUnit.FEET);
 
-        System.out.println(
-                "Feet Different Value -> " +
-                        f1.getValue() + " ft vs " +
-                        f2.getValue() + " ft => " +
-                        f1.equals(f2)
-        );
+        System.out.println("Feet vs Feet (Different) -> " +
+                q1.getValue() + " ft vs " +
+                q2.getValue() + " ft => " +
+                q1.equals(q2));
     }
 
-    // INCH TESTS
-    static void testInch_SameValue() {
-        Inch i1 = new Inch(1.0);
-        Inch i2 = new Inch(1.0);
+    static void testInchToInch_SameValue() {
+        QuantityLength q1 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
 
-        System.out.println(
-                "Inch Same Value -> " +
-                        i1.getValue() + " in vs " +
-                        i2.getValue() + " in => " +
-                        i1.equals(i2)
-        );
+        System.out.println("Inch vs Inch (Same) -> " +
+                q1.getValue() + " in vs " +
+                q2.getValue() + " in => " +
+                q1.equals(q2));
     }
 
-    static void testInch_DifferentValue() {
-        Inch i1 = new Inch(1.0);
-        Inch i2 = new Inch(2.0);
+    static void testInchToFeet_Equivalent() {
+        QuantityLength q1 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength q2 = new QuantityLength(1.0, LengthUnit.FEET);
 
-        System.out.println(
-                "Inch Different Value -> " +
-                        i1.getValue() + " in vs " +
-                        i2.getValue() + " in => " +
-                        i1.equals(i2)
-        );
+        System.out.println("12 inch vs 1 feet -> " +
+                q1.getValue() + " in vs " +
+                q2.getValue() + " ft => " +
+                q1.equals(q2));
     }
 
     static void runAllTests() {
-        System.out.println("===== FEET TESTS =====");
-        testFeet_SameValue();
-        testFeet_DifferentValue();
 
-        System.out.println("\n===== INCH TESTS =====");
-        testInch_SameValue();
-        testInch_DifferentValue();
+        testFeetToFeet_SameValue();
+        testFeetToFeet_DifferentValue();
+        testInchToInch_SameValue();
+        testInchToFeet_Equivalent();
     }
 }
 
 public class QMA {
 
     public static void main(String[] args) {
-
-        System.out.println("===== Quantity Measurement App =====\n");
 
         QuantityMeasurementTests.runAllTests();
     }

@@ -1,104 +1,87 @@
-enum LengthUnit {
+enum WeightUnit {
+    KILOGRAM(1.0),
+    GRAM(0.001),
+    POUND(0.453592);
 
-    INCH(1.0),
-    FEET(12.0),
-    YARD(36.0),
-    CENTIMETER(0.393701);
+    private final double factor;
 
-    private final double toInchFactor;
-
-    LengthUnit(double toInchFactor) {
-        this.toInchFactor = toInchFactor;
+    WeightUnit(double factor) {
+        this.factor = factor;
     }
 
-    public double convertToInch(double value) {
-        return value * toInchFactor;
+    public double toBase(double value) {
+        return value * factor;
+    }
+
+    public double fromBase(double baseValue) {
+        return baseValue / factor;
     }
 }
 
-class QuantityLength {
-
+class QuantityWeight {
     private final double value;
-    private final LengthUnit unit;
+    private final WeightUnit unit;
 
-    public QuantityLength(double value, LengthUnit unit) {
+    public QuantityWeight(double value, WeightUnit unit) {
+        if (unit == null || Double.isNaN(value) || Double.isInfinite(value)) {
+            throw new IllegalArgumentException();
+        }
         this.value = value;
         this.unit = unit;
     }
 
-    public double getValueInInch() {
-        return unit.convertToInch(value);
+    public QuantityWeight convertTo(WeightUnit target) {
+        if (target == null) throw new IllegalArgumentException();
+        double base = unit.toBase(value);
+        double converted = target.fromBase(base);
+        return new QuantityWeight(converted, target);
+    }
+
+    public QuantityWeight add(QuantityWeight other) {
+        return add(other, this.unit);
+    }
+
+    public QuantityWeight add(QuantityWeight other, WeightUnit target) {
+        if (other == null || target == null) throw new IllegalArgumentException();
+        double sumBase = this.unit.toBase(this.value) + other.unit.toBase(other.value);
+        double result = target.fromBase(sumBase);
+        return new QuantityWeight(result, target);
     }
 
     @Override
     public boolean equals(Object obj) {
-
         if (this == obj) return true;
-
         if (obj == null || getClass() != obj.getClass()) return false;
-
-        QuantityLength other = (QuantityLength) obj;
-
-        return Double.compare(this.getValueInInch(), other.getValueInInch()) == 0;
+        QuantityWeight other = (QuantityWeight) obj;
+        double a = this.unit.toBase(this.value);
+        double b = other.unit.toBase(other.value);
+        return Double.compare(a, b) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Double.hashCode(getValueInInch());
+        return Double.hashCode(unit.toBase(value));
     }
 
-    public double getValue() {
-        return value;
-    }
-
-    public LengthUnit getUnit() {
-        return unit;
-    }
-}
-
-class QuantityMeasurementTests {
-
-    static void testYardToFeet() {
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARD);
-        QuantityLength q2 = new QuantityLength(3.0, LengthUnit.FEET);
-
-        System.out.println("1 Yard vs 3 Feet => " + q1.equals(q2));
-    }
-
-    static void testYardToInch() {
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARD);
-        QuantityLength q2 = new QuantityLength(36.0, LengthUnit.INCH);
-
-        System.out.println("1 Yard vs 36 Inch => " + q1.equals(q2));
-    }
-
-    static void testCentimeterToInch() {
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.CENTIMETER);
-        QuantityLength q2 = new QuantityLength(0.393701, LengthUnit.INCH);
-
-        System.out.println("1 cm vs 0.393701 inch => " + q1.equals(q2));
-    }
-
-    static void testComplexCase() {
-        QuantityLength q1 = new QuantityLength(2.0, LengthUnit.YARD);
-        QuantityLength q2 = new QuantityLength(72.0, LengthUnit.INCH);
-
-        System.out.println("2 Yard vs 72 Inch => " + q1.equals(q2));
-    }
-
-    static void runAllTests() {
-
-        testYardToFeet();
-        testYardToInch();
-        testCentimeterToInch();
-        testComplexCase();
+    @Override
+    public String toString() {
+        return value + " " + unit;
     }
 }
 
 public class QMA {
-
     public static void main(String[] args) {
+        QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+        QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
+        System.out.println(q1.equals(q2));
 
-        QuantityMeasurementTests.runAllTests();
+        QuantityWeight q3 = new QuantityWeight(2.0, WeightUnit.POUND);
+        System.out.println(q3.convertTo(WeightUnit.KILOGRAM));
+
+        QuantityWeight sum = q1.add(q2);
+        System.out.println(sum);
+
+        QuantityWeight sum2 = q1.add(q2, WeightUnit.GRAM);
+        System.out.println(sum2);
     }
 }

@@ -1,4 +1,40 @@
-enum WeightUnit {
+interface IMeasurable {
+    double getConversionFactor();
+    double convertToBaseUnit(double value);
+    double convertFromBaseUnit(double baseValue);
+    String getUnitName();
+}
+
+enum LengthUnit implements IMeasurable {
+    INCH(1.0),
+    FEET(12.0),
+    YARD(36.0),
+    CENTIMETER(0.393701);
+
+    private final double factor;
+
+    LengthUnit(double factor) {
+        this.factor = factor;
+    }
+
+    public double getConversionFactor() {
+        return factor;
+    }
+
+    public double convertToBaseUnit(double value) {
+        return value * factor;
+    }
+
+    public double convertFromBaseUnit(double baseValue) {
+        return baseValue / factor;
+    }
+
+    public String getUnitName() {
+        return name();
+    }
+}
+
+enum WeightUnit implements IMeasurable {
     KILOGRAM(1.0),
     GRAM(0.001),
     POUND(0.453592);
@@ -9,20 +45,28 @@ enum WeightUnit {
         this.factor = factor;
     }
 
-    public double toBase(double value) {
+    public double getConversionFactor() {
+        return factor;
+    }
+
+    public double convertToBaseUnit(double value) {
         return value * factor;
     }
 
-    public double fromBase(double baseValue) {
+    public double convertFromBaseUnit(double baseValue) {
         return baseValue / factor;
+    }
+
+    public String getUnitName() {
+        return name();
     }
 }
 
-class QuantityWeight {
+class Quantity<U extends IMeasurable> {
     private final double value;
-    private final WeightUnit unit;
+    private final U unit;
 
-    public QuantityWeight(double value, WeightUnit unit) {
+    public Quantity(double value, U unit) {
         if (unit == null || Double.isNaN(value) || Double.isInfinite(value)) {
             throw new IllegalArgumentException();
         }
@@ -30,58 +74,59 @@ class QuantityWeight {
         this.unit = unit;
     }
 
-    public QuantityWeight convertTo(WeightUnit target) {
+    public Quantity<U> convertTo(U target) {
         if (target == null) throw new IllegalArgumentException();
-        double base = unit.toBase(value);
-        double converted = target.fromBase(base);
-        return new QuantityWeight(converted, target);
+        double base = unit.convertToBaseUnit(value);
+        double converted = target.convertFromBaseUnit(base);
+        return new Quantity<>(converted, target);
     }
 
-    public QuantityWeight add(QuantityWeight other) {
+    public Quantity<U> add(Quantity<U> other) {
         return add(other, this.unit);
     }
 
-    public QuantityWeight add(QuantityWeight other, WeightUnit target) {
+    public Quantity<U> add(Quantity<U> other, U target) {
         if (other == null || target == null) throw new IllegalArgumentException();
-        double sumBase = this.unit.toBase(this.value) + other.unit.toBase(other.value);
-        double result = target.fromBase(sumBase);
-        return new QuantityWeight(result, target);
+        double sumBase = this.unit.convertToBaseUnit(this.value) +
+                other.unit.convertToBaseUnit(other.value);
+        double result = target.convertFromBaseUnit(sumBase);
+        return new Quantity<>(result, target);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        QuantityWeight other = (QuantityWeight) obj;
-        double a = this.unit.toBase(this.value);
-        double b = other.unit.toBase(other.value);
+        Quantity<?> other = (Quantity<?>) obj;
+        if (this.unit.getClass() != other.unit.getClass()) return false;
+        double a = this.unit.convertToBaseUnit(this.value);
+        double b = other.unit.convertToBaseUnit(other.value);
         return Double.compare(a, b) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Double.hashCode(unit.toBase(value));
+        return Double.hashCode(unit.convertToBaseUnit(value));
     }
 
     @Override
     public String toString() {
-        return value + " " + unit;
+        return value + " " + unit.getUnitName();
     }
 }
 
 public class QMA {
     public static void main(String[] args) {
-        QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
-        QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
-        System.out.println(q1.equals(q2));
+        Quantity<LengthUnit> l1 = new Quantity<>(1.0, LengthUnit.FEET);
+        Quantity<LengthUnit> l2 = new Quantity<>(12.0, LengthUnit.INCH);
+        System.out.println(l1.equals(l2));
+        System.out.println(l1.convertTo(LengthUnit.INCH));
+        System.out.println(l1.add(l2, LengthUnit.FEET));
 
-        QuantityWeight q3 = new QuantityWeight(2.0, WeightUnit.POUND);
-        System.out.println(q3.convertTo(WeightUnit.KILOGRAM));
-
-        QuantityWeight sum = q1.add(q2);
-        System.out.println(sum);
-
-        QuantityWeight sum2 = q1.add(q2, WeightUnit.GRAM);
-        System.out.println(sum2);
+        Quantity<WeightUnit> w1 = new Quantity<>(1.0, WeightUnit.KILOGRAM);
+        Quantity<WeightUnit> w2 = new Quantity<>(1000.0, WeightUnit.GRAM);
+        System.out.println(w1.equals(w2));
+        System.out.println(w1.convertTo(WeightUnit.GRAM));
+        System.out.println(w1.add(w2, WeightUnit.KILOGRAM));
     }
 }

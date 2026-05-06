@@ -36,62 +36,6 @@ enum LengthUnit implements IMeasurable {
     }
 }
 
-enum WeightUnit implements IMeasurable {
-    KILOGRAM(1.0),
-    GRAM(0.001),
-    POUND(0.453592);
-
-    private final double factor;
-
-    WeightUnit(double factor) {
-        this.factor = factor;
-    }
-
-    public double getConversionFactor() {
-        return factor;
-    }
-
-    public double convertToBaseUnit(double value) {
-        return value * factor;
-    }
-
-    public double convertFromBaseUnit(double baseValue) {
-        return baseValue / factor;
-    }
-
-    public String getUnitName() {
-        return name();
-    }
-}
-
-enum VolumeUnit implements IMeasurable {
-    LITRE(1.0),
-    MILLILITRE(0.001),
-    GALLON(3.78541);
-
-    private final double factor;
-
-    VolumeUnit(double factor) {
-        this.factor = factor;
-    }
-
-    public double getConversionFactor() {
-        return factor;
-    }
-
-    public double convertToBaseUnit(double value) {
-        return value * factor;
-    }
-
-    public double convertFromBaseUnit(double baseValue) {
-        return baseValue / factor;
-    }
-
-    public String getUnitName() {
-        return name();
-    }
-}
-
 enum ArithmeticOperation {
     ADD((a, b) -> a + b),
     SUBTRACT((a, b) -> a - b),
@@ -155,41 +99,11 @@ class Quantity<U extends IMeasurable> {
         return new Quantity<>(converted, target);
     }
 
-    public Quantity<U> subtract(Quantity<U> other) {
-        return subtract(other, this.unit);
-    }
-
-    public Quantity<U> subtract(Quantity<U> other, U target) {
-        if (target == null) throw new IllegalArgumentException();
-        double result = operate(other, ArithmeticOperation.SUBTRACT);
-        double converted = target.convertFromBaseUnit(result);
-        return new Quantity<>(converted, target);
-    }
-
-    public double divide(Quantity<U> other) {
-        return operate(other, ArithmeticOperation.DIVIDE);
-    }
-
     public Quantity<U> convertTo(U target) {
         if (target == null) throw new IllegalArgumentException();
         double base = unit.convertToBaseUnit(value);
         double converted = target.convertFromBaseUnit(base);
         return new Quantity<>(converted, target);
-    }
-
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        Quantity<?> other = (Quantity<?>) obj;
-        if (!this.unit.getClass().equals(other.unit.getClass())) return false;
-        return Double.compare(
-                this.unit.convertToBaseUnit(this.value),
-                other.unit.convertToBaseUnit(other.value)
-        ) == 0;
-    }
-
-    public int hashCode() {
-        return Double.hashCode(unit.convertToBaseUnit(value));
     }
 
     public String toString() {
@@ -199,27 +113,23 @@ class Quantity<U extends IMeasurable> {
 
 class QuantityMeasurementApp {
 
-    public static double convert(double value, LengthUnit source, LengthUnit target) {
-        if (source == null || target == null) {
+    public static Quantity<LengthUnit> add(
+            Quantity<LengthUnit> q1,
+            Quantity<LengthUnit> q2,
+            LengthUnit target) {
+
+        if (q1 == null || q2 == null || target == null) {
             throw new IllegalArgumentException();
         }
-        if (Double.isNaN(value) || Double.isInfinite(value)) {
-            throw new IllegalArgumentException();
-        }
-        double baseValue = source.convertToBaseUnit(value);
-        return target.convertFromBaseUnit(baseValue);
+
+        return q1.add(q2, target);
     }
 
-    public static Quantity<LengthUnit> add(Quantity<LengthUnit> q1, Quantity<LengthUnit> q2) {
-        if (q1 == null || q2 == null) {
-            throw new IllegalArgumentException();
-        }
-        return q1.add(q2);
-    }
+    public static Quantity<LengthUnit> add(
+            double v1, LengthUnit u1,
+            double v2, LengthUnit u2,
+            LengthUnit target) {
 
-    public static Quantity<LengthUnit> add(double v1, LengthUnit u1,
-                                           double v2, LengthUnit u2,
-                                           LengthUnit target) {
         if (u1 == null || u2 == null || target == null) {
             throw new IllegalArgumentException();
         }
@@ -240,20 +150,28 @@ class QuantityMeasurementApp {
 public class QMA {
     public static void main(String[] args) {
 
-        System.out.println(QuantityMeasurementApp.add(
-                new Quantity<>(1.0, LengthUnit.FEET),
-                new Quantity<>(12.0, LengthUnit.INCH)
-        ));
+        System.out.println(
+                QuantityMeasurementApp.add(
+                        new Quantity<>(1.0, LengthUnit.FEET),
+                        new Quantity<>(12.0, LengthUnit.INCH),
+                        LengthUnit.FEET
+                )
+        );
 
-        System.out.println(QuantityMeasurementApp.add(
-                1.0, LengthUnit.FEET,
-                12.0, LengthUnit.INCH,
-                LengthUnit.FEET
-        ));
+        System.out.println(
+                QuantityMeasurementApp.add(
+                        new Quantity<>(1.0, LengthUnit.FEET),
+                        new Quantity<>(12.0, LengthUnit.INCH),
+                        LengthUnit.INCH
+                )
+        );
 
-        Quantity<LengthUnit> l1 = new Quantity<>(1.0, LengthUnit.YARD);
-        Quantity<LengthUnit> l2 = new Quantity<>(3.0, LengthUnit.FEET);
-
-        System.out.println(l1.add(l2));
+        System.out.println(
+                QuantityMeasurementApp.add(
+                        1.0, LengthUnit.FEET,
+                        12.0, LengthUnit.INCH,
+                        LengthUnit.YARD
+                )
+        );
     }
 }

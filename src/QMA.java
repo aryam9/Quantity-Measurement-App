@@ -198,6 +198,7 @@ class Quantity<U extends IMeasurable> {
 }
 
 class QuantityMeasurementApp {
+
     public static double convert(double value, LengthUnit source, LengthUnit target) {
         if (source == null || target == null) {
             throw new IllegalArgumentException();
@@ -208,19 +209,51 @@ class QuantityMeasurementApp {
         double baseValue = source.convertToBaseUnit(value);
         return target.convertFromBaseUnit(baseValue);
     }
+
+    public static Quantity<LengthUnit> add(Quantity<LengthUnit> q1, Quantity<LengthUnit> q2) {
+        if (q1 == null || q2 == null) {
+            throw new IllegalArgumentException();
+        }
+        return q1.add(q2);
+    }
+
+    public static Quantity<LengthUnit> add(double v1, LengthUnit u1,
+                                           double v2, LengthUnit u2,
+                                           LengthUnit target) {
+        if (u1 == null || u2 == null || target == null) {
+            throw new IllegalArgumentException();
+        }
+        if (Double.isNaN(v1) || Double.isInfinite(v1) ||
+            Double.isNaN(v2) || Double.isInfinite(v2)) {
+            throw new IllegalArgumentException();
+        }
+
+        double base1 = u1.convertToBaseUnit(v1);
+        double base2 = u2.convertToBaseUnit(v2);
+        double sum = base1 + base2;
+        double converted = target.convertFromBaseUnit(sum);
+
+        return new Quantity<>(converted, target);
+    }
 }
 
 public class QMA {
     public static void main(String[] args) {
-        System.out.println(QuantityMeasurementApp.convert(1.0, LengthUnit.FEET, LengthUnit.INCH));
-        System.out.println(QuantityMeasurementApp.convert(3.0, LengthUnit.YARD, LengthUnit.FEET));
-        System.out.println(QuantityMeasurementApp.convert(36.0, LengthUnit.INCH, LengthUnit.YARD));
 
-        Quantity<LengthUnit> l1 = new Quantity<>(10.0, LengthUnit.FEET);
-        Quantity<LengthUnit> l2 = new Quantity<>(6.0, LengthUnit.INCH);
+        System.out.println(QuantityMeasurementApp.add(
+                new Quantity<>(1.0, LengthUnit.FEET),
+                new Quantity<>(12.0, LengthUnit.INCH)
+        ));
 
-        System.out.println(l1.subtract(l2));
+        System.out.println(QuantityMeasurementApp.add(
+                1.0, LengthUnit.FEET,
+                12.0, LengthUnit.INCH,
+                LengthUnit.FEET
+        ));
+
+        Quantity<LengthUnit> l1 = new Quantity<>(1.0, LengthUnit.YARD);
+        Quantity<LengthUnit> l2 = new Quantity<>(3.0, LengthUnit.FEET);
+
         System.out.println(l1.add(l2));
-        System.out.println(l1.divide(l2));
     }
 }

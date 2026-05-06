@@ -197,27 +197,30 @@ class Quantity<U extends IMeasurable> {
     }
 }
 
+class QuantityMeasurementApp {
+    public static double convert(double value, LengthUnit source, LengthUnit target) {
+        if (source == null || target == null) {
+            throw new IllegalArgumentException();
+        }
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            throw new IllegalArgumentException();
+        }
+        double baseValue = source.convertToBaseUnit(value);
+        return target.convertFromBaseUnit(baseValue);
+    }
+}
+
 public class QMA {
     public static void main(String[] args) {
+        System.out.println(QuantityMeasurementApp.convert(1.0, LengthUnit.FEET, LengthUnit.INCH));
+        System.out.println(QuantityMeasurementApp.convert(3.0, LengthUnit.YARD, LengthUnit.FEET));
+        System.out.println(QuantityMeasurementApp.convert(36.0, LengthUnit.INCH, LengthUnit.YARD));
+
         Quantity<LengthUnit> l1 = new Quantity<>(10.0, LengthUnit.FEET);
         Quantity<LengthUnit> l2 = new Quantity<>(6.0, LengthUnit.INCH);
 
         System.out.println(l1.subtract(l2));
         System.out.println(l1.add(l2));
         System.out.println(l1.divide(l2));
-
-        Quantity<WeightUnit> w1 = new Quantity<>(10.0, WeightUnit.KILOGRAM);
-        Quantity<WeightUnit> w2 = new Quantity<>(5000.0, WeightUnit.GRAM);
-
-        System.out.println(w1.subtract(w2));
-        System.out.println(w1.add(w2));
-        System.out.println(w1.divide(w2));
-
-        Quantity<VolumeUnit> v1 = new Quantity<>(5.0, VolumeUnit.LITRE);
-        Quantity<VolumeUnit> v2 = new Quantity<>(1000.0, VolumeUnit.MILLILITRE);
-
-        System.out.println(v1.subtract(v2));
-        System.out.println(v1.add(v2));
-        System.out.println(v1.divide(v2));
     }
 }
